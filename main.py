@@ -6,6 +6,7 @@ from io import BytesIO
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
+import os # Импортируем модуль os
 
 # Настройки логирования
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -14,15 +15,26 @@ logger = logging.getLogger(__name__)
 
 # --- Ваши настройки API ---
 base_url = 'https://api-inference.modelscope.ai/'
-api_key = "ms-d7048081-0a82-428d-b0c2-2975ad9805d3" # ModelScope Token
+# Получаем API ключ ModelScope из переменной окружения
+api_key = os.environ.get("MODEL_SCOPE_API_KEY") 
+if not api_key:
+    logger.error("MODEL_SCOPE_API_KEY не установлен в переменных окружения!")
+    # В среде развертывания лучше явно выходить, если ключи не настроены
+    exit(1)
+
 common_headers = {
     "Authorization": f"Bearer {api_key}",
     "Content-Type": "application/json",
 }
 # --- Конец ваших настроек API ---
 
-# Замените 'YOUR_BOT_TOKEN' на токен вашего Telegram бота
-TELEGRAM_BOT_TOKEN = '8506840047:AAHueEidwHQDuKJrbUle1UvjpUcDU5zZ2ic'
+# Получаем токен Telegram бота из переменной окружения
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+if not TELEGRAM_BOT_TOKEN:
+    logger.error("TELEGRAM_BOT_TOKEN не установлен в переменных окружения!")
+    # В среде развертывания лучше явно выходить, если 
+    # ключи не настроены
+    exit(1)
 
 # Состояние для отслеживания ожидания запроса на генерацию
 user_states = {}
@@ -106,13 +118,22 @@ async def generate_image_from_prompt(prompt: str) -> str | None:
 
 def main() -> None:
     """Запускает бота."""
-    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    logger.info("Функция main() вызвана.")
+    try:
+        application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+        logger.info("Application успешно построен.")
 
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(button))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        application.add_handler(CommandHandler("start", start))
+        application.add_handler(CallbackQueryHandler(button))
+        application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+        logger.info("Обработчики добавлены.")
 
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+        logger.info("Запускаем бота (run_polling)...")
+        application.run_polling(allowed_updates=Update.ALL_TYPES)
+        logger.info("Бот остановлен (run_polling завершился).")
+    except Exception as e:
+        logger.exception("Произошла ошибка при запуске бота:") # Используем exception для полного стектрейса
 
 if __name__ == "__main__":
+    logger.info("Скрипт запущен напрямую.")
     main()
