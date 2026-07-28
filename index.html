@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Музыка</title>
+<style>
+body{
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    cursor:pointer;
+    user-select:none;
+}
+h1{
+    font-size:40px;
+}
+</style>
+</head>
+<body>
+
+<h1>Нажми в любом месте</h1>
+
+<audio id="music" loop>
+    <source src="music.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+document.body.addEventListener("click", async () => {
+
+    if (document.documentElement.requestFullscreen) {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (e) {}
+    }
+
+    const audio = document.getElementById("music");
+    audio.volume = 1.0;
+    audio.play();
+
+    document.body.innerHTML = "<h1>🎵</h1>";
+
+}, { once: true });
+</script>
+
+</body>
+</html>
